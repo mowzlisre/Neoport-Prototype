@@ -4,7 +4,7 @@ from pprint import pprint
 # Read the CSV file and format the 'artists' and 'artist_ids' columns
 
 print(">>> Attempting to import the CSV")
-with open('sample.csv', newline='') as csvfile:
+with open('tracks_features.csv', newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     data = list(reader)
     print(">>> CSV Imported")
@@ -20,8 +20,10 @@ with open('sample.csv', newline='') as csvfile:
             
 
 print(">>> Preprocessing - Phase II")
-albums = [{'name': item['album'], 'id': item['album_id']} for item in data]
-artists = [{'name': name, 'id': artist_id} for item in data for name, artist_id in zip(item['artists'], item['artist_ids'])]
+albums_data = [{'name': item['album'], 'id': item['album_id']} for item in data]
+albums_data = [dict(t) for t in {tuple(d.items()) for d in albums_data}]
+artists_data = [{'name': name, 'id': artist_id} for item in data for name, artist_id in zip(item['artists'], item['artist_ids'])]
+artists_data = [dict(t) for t in {tuple(d.items()) for d in artists_data}]
 
 print(">>> Preprocessing - Phase III")
 data = [{k: v for k, v in item.items() if k != 'album'} for item in data]
@@ -34,7 +36,9 @@ print(">>> Preprocessing completed!")
 #     del item['artist_ids']
 #     del item['artists']
 
-print(">>> Attempting to conenct to MongoDB Client")
+print(">>> Attempting to establish connection with MongoDB Client")
+
+
 # Importing into MongoDB
 from pymongo import MongoClient
 
@@ -56,7 +60,7 @@ print(">>> Attempting to Insert documents in Albums collection")
 albums = db["Albums"]
 
 # Insert many documents into the collection
-result = albums.insert_many(albums)
+result = albums.insert_many(albums_data)
 print(">>> Inserting documents in Albums collection successful")
 
 print(">>> Attempting to Insert documents in Artists collection")
@@ -64,12 +68,11 @@ print(">>> Attempting to Insert documents in Artists collection")
 artists = db["Artists"]
 
 # Insert many documents into the collection
-result = artists.insert_many(artists)
+result = artists.insert_many(artists_data)
 print(">>> Inserting documents in Artists collection successful")
 
-
 # Print the inserted document IDs
-print(">>> Ending MongoDB Data Insertion!")
-
+print(">>> Closing MongoDB connection!")
+client.close()
 # Importing into Neo4J
 
