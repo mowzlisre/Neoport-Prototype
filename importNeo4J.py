@@ -57,20 +57,24 @@ print("Preprocessing done")
 #%%
 def generate_number_sequence(n):
     result = []
-    div = 10000
+    div = 1000
     while div <= n:
         result.append(div)
-        div += 10000
+        div += 1000
     if result[-1] != n:
         result.append(n)
     return result
 
-if len(data) > 10000:
+if len(data) > 1000:
     batches = generate_number_sequence(len(data))
 else:
-    batches = [10000]
+    batches = [1000]
+
 
 prev = 0
+
+print(batches)
+
 for index, batch in enumerate(batches):
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
