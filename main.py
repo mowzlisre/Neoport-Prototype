@@ -1,105 +1,116 @@
-# Step 1
-# Reading the CSV file
-import csv, ast
-
-# Initialize an empty list to store the data
-data = []
-
-# Path to your CSV file
-
-# Reading the CSV file and converting it into Python data
-start = 192121  # Specify the starting row number (inclusive)
-end = 200000   # Specify the ending row number (exclusive)
-
-with open('./tracks_features.csv', newline='') as csvfile:
-    reader = csv.DictReader(csvfile)
-    current_row = 0
-    
-    # Move to the start position
-    while current_row < start:
-        next(reader)  # Skip rows until the start position
-        current_row += 1
-    
-    # Read rows within the specified range
-    for row in reader:
-        # Check if the end position is reached
-        if current_row >= end:
-            break
-        
-        data.append(row)
-        current_row += 1
-
-
-# Step 2
-# Clean the Dataset
-
-# Step 3
-
-# Step Inserting
-
+#%%
 from neo4j import GraphDatabase
+import csv, re
+import ast, time
+import multiprocessing
+from support import *
 
-uri = "bolt://localhost:7687"
-username = "neo4j"
-password = "12345678"
+albums_data = []
+artists_data = []
+existing_artist_ids = set()  # Use a set for faster lookup
 
-driver = GraphDatabase.driver(uri, auth=(username, password))
-
-def insert_data(tx, item):
-    item["artists"] = ast.literal_eval(item["artists"])
-    item["artist_ids"] = ast.literal_eval(item["artist_ids"])
-    item["artist_names"] = ", ".join(item["artists"])
-    item["artist_ids"] = item["artist_ids"] if isinstance(item["artist_ids"], list) else [item["artist_ids"]]
-
-    query = """
-        CREATE (track:Track {
-            id: $id,
-            name: $name,
-            track_number: $track_number,
-            disc_number: $disc_number,
-            explicit: $explicit,
-            danceability: $danceability,
-            energy: $energy,
-            key: $key,
-            loudness: $loudness,
-            mode: $mode,
-            speechiness: $speechiness,
-            acousticness: $acousticness,
-            instrumentalness: $instrumentalness,
-            liveness: $liveness,
-            valence: $valence,
-            tempo: $tempo,
-            duration_ms: $duration_ms,
-            time_signature: $time_signature,
-            year: $year,
-            release_date: $release_date,
-            artist_names: $artist_names
+def preprocess(rows):
+    for row in rows:
+        row['artists'] = ast.literal_eval(row['artists'])
+        row['artist_ids'] = ast.literal_eval(row['artist_ids'])
+        
+        albums_data.append({
+            "name": row['album'],
+            "_id": row["album_id"]
         })
-        MERGE (_album:Album {
-            album_name: $album,
-            album_id: $album_id
-        })
-        WITH track, _album
-        MERGE (_album)-[:ContainsTrack]->(track)
-    """
-    for index, artist_id in enumerate(item["artist_ids"]):
-        artist_id_value = item["artist_ids"][index].replace("'", "\\'") if "'" in item["artist_ids"][index] else item["artist_ids"][index].replace('"', '\\"')
-        artist_name_value = item["artist_names"].split(',')[index].replace("'", "\\'") if "'" in item["artist_names"].split(',')[index] else item["artist_names"].split(',')[index].replace('"', '\\"')
+
+        for index, artist in enumerate(row['artist_ids']):
+            if artist not in existing_artist_ids:
+                artists_data.append({
+                    "name": row['artists'][index],
+                    "_id": artist
+                })
+                existing_artist_ids.add(artist) 
+        integer = r'^-?\d+$'
+        flt = r'^-?\d+(\.\d+)?$'
+        for key, value in row.items():
+            if isinstance(value, str):
+                if re.match(integer, value):
+                    if int(value) < 2147483647:
+                        row[key] = int(value)
+                elif re.match(flt, value):
+                    row[key] = float(value)
+        
+        row["explicit"] = True if row["explicit"] == "True" else False
+
+if __name__ == "__main__":
+    x = time.time()
+    with open('tracks_features.csv', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        data = list(reader)
+        print(">>> CSV Imported")
+        print(">>> Starting to Preprocess the data to evaluate the data types")
+        print(">>> Preprocessing - Phase I")
+
+    # Split data into chunks for parallel processing
+    num_chunks = multiprocessing.cpu_count()  # Number of chunks equal to CPU cores
+    chunk_size = len(data) // num_chunks
+    data_chunks = [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
+
+    # Create a Pool of processes
+    with multiprocessing.Pool() as pool:
+        pool.map(preprocess, data_chunks)
+    y = time.time()
+    print(f"Preprocess ended in {y-x}s")
+
+    if len(data) > 50000:
+        batches = generate_number_sequence(len(data))
+    else:
+        batches = [50000]
+
+    prev = 0
+
+    for index, batch in enumerate(batches):
+        driver = GraphDatabase.driver(URI, auth=(USERNAME, PASSWORD))
+        with driver.session() as session:
+            print(f"Inserting Batch {index+1} of {len(batches)}")
+            # Run Cypher query to bulk insert nodes
+            session.run("""
+                UNWIND $nodes AS node
+                MERGE (_album:Album {
+                    name: node.album,
+                    id: node.album_id
+                }) 
+                CREATE (track:Track {
+                    id: node.id,
+                    name: node.name,
+                    track_number: node.track_number,
+                    disc_number: node.disc_number,
+                    explicit: node.explicit,
+                    danceability: node.danceability,
+                    energy: node.energy,
+                    key: node.key,
+                    loudness: node.loudness,
+                    mode: node.mode,
+                    speechiness: node.speechiness,
+                    acousticness: node.acousticness,
+                    instrumentalness: node.instrumentalness,
+                    liveness: node.liveness,
+                    valence: node.valence,
+                    tempo: node.tempo,
+                    duration_ms: node.duration_ms,
+                    time_signature: node.time_signature,
+                    year: node.year,
+                    release_date: node.release_date
+                })  
+                MERGE (_album)-[:ContainsTrack]->(track)
+                FOREACH(idx IN RANGE(0, size(node.artists) - 1) |
+                    MERGE (_artist:Artist {
+                        id: node.artist_ids[idx],
+                        artist_name: node.artists[idx]
+                    })
+                    MERGE (_artist)-[:Contributed]->(_album)
+                )
+            """, nodes=data[prev:batch])
+        prev = batch
+
+        driver.close()
     
-        query += f"""
-            MERGE (_artist{index}:Artist {{id: '{artist_id_value}', artist_name: "{artist_name_value}"}})
-            WITH _artist{index}, _album
-            MERGE (_artist{index})-[:Contributed]->(_album)
-        """
-
-
-    tx.run(query, **item)
-
-# Your 'data' variable containing the list of track information
-ind = 0
-with driver.session() as session:
-    for item in data:
-        session.write_transaction(insert_data, item)
-        print(f"Row {start+ind} is inserted of {end}")
-        ind += 1
-
+    x = time.time()
+    print(f"Inserting ended in {x-y:.2f}s")
+# %%
