@@ -1,35 +1,42 @@
-#%%
 from neo4j import GraphDatabase
 import csv
 import ast  # Library to parse strings as Python literals
 from pprint import pprint
 # Read the CSV file and format the 'artists' and 'artist_ids' columns
 
-rel = []
 
 with open('tracks_features.csv', newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     data = list(reader)
-    print("CSV Import done")
-    # Loop through the rows and format the 'artists' and 'artist_ids' columns
+    print(">>> CSV Imported")
+    print(">>> Starting to Preprocess the data to evaluate the data types")
+    print(">>> Preprocessing - Phase I")
+
+    albums_data = []
+    artists_data = []
+    existing_artist_ids = set()  # Use a set for faster lookup
+
     for row in data:
-        # Convert 'artists' column from string to list
         row['artists'] = ast.literal_eval(row['artists'])
-
-        # Convert 'artist_ids' column from string to list
         row['artist_ids'] = ast.literal_eval(row['artist_ids'])
-        # for item in row['artist_ids']:
-        #     obj = {
-        #         "source" : item,
-        #         "target" : row["id"],
-        #         "type" : "CONTRIBUTED_TO"
-        #     }
-        #     rel.append(obj)
-            
+        
+        albums_data.append({
+            "name": row['album'],
+            "_id": row["album_id"]
+        })
 
-albums = [{'name': item['album'], 'id': item['album_id']} for item in data]
-artists = [{'name': name, 'id': artist_id} for item in data for name, artist_id in zip(item['artists'], item['artist_ids'])]
 
+        for index, artist in enumerate(row['artist_ids']):
+            if artist not in existing_artist_ids:
+                artists_data.append({
+                    "name": row['artists'][index],
+                    "_id": artist
+                })
+                existing_artist_ids.add(artist) 
+
+print(">>> Preprocessing - Phase II")
+                
+albums_data = [dict(t) for t in {tuple(d.items()) for d in albums_data}]
 
 # Your nodes as a list of dictionaries
 

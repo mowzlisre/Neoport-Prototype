@@ -32,6 +32,9 @@ with open('tracks_features.csv', newline='') as csvfile:
                     "_id": artist
                 })
                 existing_artist_ids.add(artist) 
+        del row["artists"]
+        del row["album"]
+        del row["artist_ids"]
 
 print(">>> Preprocessing - Phase II")
                 
