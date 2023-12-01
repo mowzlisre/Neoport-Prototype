@@ -1,6 +1,7 @@
-import csv
+import csv, re
 import ast  # Library to parse strings as Python literals
 from pprint import pprint
+from datetime import datetime
 # Read the CSV file and format the 'artists' and 'artist_ids' columns
 
 
@@ -24,7 +25,6 @@ with open('tracks_features.csv', newline='') as csvfile:
             "_id": row["album_id"]
         })
 
-
         for index, artist in enumerate(row['artist_ids']):
             if artist not in existing_artist_ids:
                 artists_data.append({
@@ -32,9 +32,19 @@ with open('tracks_features.csv', newline='') as csvfile:
                     "_id": artist
                 })
                 existing_artist_ids.add(artist) 
+        integer = r'^-?\d+$'
+        flt = r'^-?\d+(\.\d+)?$'
         del row["artists"]
         del row["album"]
         del row["artist_ids"]
+        for key, value in row.items():
+            if re.match(integer, value):
+                if int(value) < 2147483647:
+                    row[key] = int(value)
+            elif re.match(flt, value):
+                row[key] = float(value)
+        
+        row["explicit"] = True if row["explicit"] == "True" else False
 
 print(">>> Preprocessing - Phase II")
                 
