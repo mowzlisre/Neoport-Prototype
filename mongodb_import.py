@@ -3,38 +3,39 @@ import ast  # Library to parse strings as Python literals
 from pprint import pprint
 # Read the CSV file and format the 'artists' and 'artist_ids' columns
 
-print(">>> Attempting to import the CSV")
+
 with open('tracks_features.csv', newline='') as csvfile:
     reader = csv.DictReader(csvfile)
     data = list(reader)
     print(">>> CSV Imported")
-    # Loop through the rows and format the 'artists' and 'artist_ids' columns
     print(">>> Starting to Preprocess the data to evaluate the data types")
     print(">>> Preprocessing - Phase I")
-    for row in data:
-        # Convert 'artists' column from string to list
-        row['artists'] = ast.literal_eval(row['artists'])
 
-        # Convert 'artist_ids' column from string to list
+    albums_data = []
+    artists_data = []
+    existing_artist_ids = set()  # Use a set for faster lookup
+
+    for row in data:
+        row['artists'] = ast.literal_eval(row['artists'])
         row['artist_ids'] = ast.literal_eval(row['artist_ids'])
-            
+        
+        albums_data.append({
+            "name": row['album'],
+            "_id": row["album_id"]
+        })
+
+
+        for index, artist in enumerate(row['artist_ids']):
+            if artist not in existing_artist_ids:
+                artists_data.append({
+                    "name": row['artists'][index],
+                    "_id": artist
+                })
+                existing_artist_ids.add(artist) 
 
 print(">>> Preprocessing - Phase II")
-albums_data = [{'name': item['album'], 'id': item['album_id']} for item in data]
+                
 albums_data = [dict(t) for t in {tuple(d.items()) for d in albums_data}]
-artists_data = [{'name': name, 'id': artist_id} for item in data for name, artist_id in zip(item['artists'], item['artist_ids'])]
-artists_data = [dict(t) for t in {tuple(d.items()) for d in artists_data}]
-
-print(">>> Preprocessing - Phase III")
-data = [{k: v for k, v in item.items() if k != 'album'} for item in data]
-data = [{k: v for k, v in item.items() if k != 'artists'} for item in data]
-
-print(">>> Preprocessing completed!")
-# for item in data:
-#     del item['album']
-#     del item['album_id']
-#     del item['artist_ids']
-#     del item['artists']
 
 print(">>> Attempting to establish connection with MongoDB Client")
 
@@ -47,7 +48,7 @@ client = MongoClient('mongodb://localhost:27017/')  # Update with your MongoDB c
 
 db = client['TracksDB']
 
-print(">>> Attempting to Insert documents in Tracks collection")
+print(f">>> Attempting to Insert {len(data)} documents in Tracks collection")
 # Inserting Tracks Data
 tracks = db['Tracks']
 
@@ -55,7 +56,7 @@ tracks = db['Tracks']
 result = tracks.insert_many(data)
 print(">>> Inserting documents in Tracks collection successful")
 
-print(">>> Attempting to Insert documents in Albums collection")
+print(f">>> Attempting to Insert {len(albums_data)} documents in Albums collection")
 # Inserting Albums 
 albums = db["Albums"]
 
@@ -63,7 +64,7 @@ albums = db["Albums"]
 result = albums.insert_many(albums_data)
 print(">>> Inserting documents in Albums collection successful")
 
-print(">>> Attempting to Insert documents in Artists collection")
+print(f">>> Attempting to Insert {len(artists_data)} documents in Artists collection")
 # Inserting Artists 
 artists = db["Artists"]
 
