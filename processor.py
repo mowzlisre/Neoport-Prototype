@@ -15,17 +15,24 @@ def preprocess(data):
             "name": row['album'],
             "_id": row["album_id"]
         })
-        rel_1 = 'CREATE (:Album{ id : "%s" })-[:CONTAINS_TRACKS]->(:Track{ id : "%s" })' %(row["album_id"], row["id"])
+        rel_1 = {
+            "album_id" : row["album_id"],
+            "track_id" : row["id"]
+        }
         ab_tr_rel.append(rel_1)
 
 
         for index, artist in enumerate(row['artist_ids']):
-            artists_data.append({
-                "name": row['artists'][index],
-                "_id": artist
-            })
-            existing_artist_ids.add(artist) 
-            rel_2 = 'CREATE (:Artist{ id : "%s" })-[:CONTRIBUTED_TO]->(:Album{ id : "%s" })' %(artist, row["album_id"])
+            if artist not in existing_artist_ids:
+                artists_data.append({
+                    "name": row['artists'][index],
+                    "_id": artist
+                })
+                existing_artist_ids.add(artist) 
+                rel_2 = {
+                    "artist_id" : artist,
+                    "album_id" : row["album_id"]
+                }
             at_ab_rel.append(rel_2)
         integer = r'^-?\d+$'
         flt = r'^-?\d+(\.\d+)?$'
@@ -44,9 +51,9 @@ def preprocess(data):
     print(">>> Preprocessor Phase II - Identifying and eliminating duplicates")          
     albums_data = [dict(t) for t in {tuple(d.items()) for d in albums_data}]        
     artists_data = [dict(t) for t in {tuple(d.items()) for d in artists_data}]
-
-    ab_tr_rel = list(set(ab_tr_rel))
-    at_ab_rel = list(set(at_ab_rel))
+       
+    ab_tr_rel = [dict(t) for t in {tuple(d.items()) for d in ab_tr_rel}]        
+    at_ab_rel = [dict(t) for t in {tuple(d.items()) for d in at_ab_rel}]
     print(">>> Preprocessor Phase 1I - Completed!")
     time.sleep(2)
     return data, albums_data, artists_data, ab_tr_rel, at_ab_rel

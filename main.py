@@ -3,6 +3,7 @@ from processor import preprocess, postprocess
 
 
 if __name__ == "__main__":
+    init = time.time()
     print(">>> Automated Data Insertion - Neo4J & MongoDB")
     # Data Loading
     print(">>> Loading the CSV file")
@@ -25,21 +26,21 @@ if __name__ == "__main__":
     nj_end = time.time()
     print(f">>> {len(data)} Tracks, {len(albums_data)} Albums, {len(artists_data)} Artists nodes and relationships imported succesfully in {nj_end-nj_init:.2f}s")
     
-    # # Postprocess
-    # print(">>> Initializing the Postprocessing for MongoDB")
-    # po_init = time.time()
-    # data = postprocess(data)
-    # po_end = time.time()
-    # print(f">>> Data Postprocessing for MongoDB completed in {po_end-po_init:.2f}s")
+    # Postprocess
+    print(">>> Initializing the Postprocessing for MongoDB")
+    po_init = time.time()
+    data = postprocess(data)
+    po_end = time.time()
+    print(f">>> Data Postprocessing for MongoDB completed in {po_end-po_init:.2f}s")
 
-    # # Import Data to MongoDB Database
-    # print(">>> Initializing the Data Import to MongoDB")
-    # mg_init = time.time()
-    # mongoProcessor.importDB(data, albums_data, artists_data)
-    # mg_end = time.time()
-    # print(f">>> {len(data)} Tracks, {len(albums_data)} Albums, {len(artists_data)} Artists documents imported succesfully in {mg_end-mg_init:.2f}s")
-
-    print(">>> Automated Data Insertion Completed")
+    # Import Data to MongoDB Database
+    print(">>> Initializing the Data Import to MongoDB")
+    mg_init = time.time()
+    mongoProcessor.importDB(data, albums_data, artists_data)
+    mg_end = time.time()
+    print(f">>> {len(data)} Tracks, {len(albums_data)} Albums, {len(artists_data)} Artists documents imported succesfully in {mg_end-mg_init:.2f}s")
+    end = time.time()
+    print(f">>> Automated Data Insertion Completed in {end-init-4:.2f}s")
 
 
     

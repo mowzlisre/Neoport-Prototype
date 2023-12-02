@@ -4,14 +4,14 @@ def importDB(data, albums_data, artists_data, ab_tr_rel, at_ab_rel):
     query1 = """
                 UNWIND $nodes AS node
                 CREATE (_album:Album {
-                    id: node.id,
+                    id: node._id,
                     name: node.name
                 }) 
             """
     query2 = """
                 UNWIND $nodes AS node
                 CREATE (_artist:Artist {
-                    id: node.id,
+                    id: node._id,
                     name: node.name
                 })
             """
@@ -40,15 +40,22 @@ def importDB(data, albums_data, artists_data, ab_tr_rel, at_ab_rel):
                     release_date: node.release_date
                 })
             """
-
+    query4 = """
+                UNWIND $nodes AS node
+                CREATE (a:Album {id: node.album_id})-[:CONTAINS_TRACKS]->(t:Track {id: node.track_id})
+            """
+    query5 = """
+                UNWIND $nodes AS node
+                CREATE (a:Artist {id: node.artist_id})-[:CONTRIBUTED_TO]->(t:ALBUM {id: node.album_id})
+            """
     print(">>> Inserting Artist nodes")
-    batch_process(artists_data[:1000], query1, False)
+    batch_process(artists_data, query1)
     print(">>> Inserting Album nodes")
-    batch_process(albums_data[:1000], query2, False)
+    batch_process(albums_data, query2)
     print(">>> Inserting Track nodes")
-    batch_process(data[:1000], query3, False)
-    print(">>> Inserting Albums-Track Relationships")
-    batch_process(ab_tr_rel[:10], '', False)
-    print(">>> Inserting Artists-Albums Relationships")
-    batch_process(at_ab_rel[:10], '', False)
+    batch_process(data, query3)
+    print(f">>> Inserting {len(ab_tr_rel)} Albums-Track Relationships")
+    batch_process(ab_tr_rel, query4)
+    print(f">>> Inserting {len(at_ab_rel)} Artists-Albums Relationships")
+    batch_process(at_ab_rel, query5)
 

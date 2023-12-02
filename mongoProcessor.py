@@ -21,7 +21,6 @@ def importDB(data, albums_data, artists_data):
 
     # Insert many documents into the collection
     result = tracks.insert_many(data)
-    print(result)
 
     print(">>> Inserting documents in Tracks collection successful")
 
@@ -34,7 +33,6 @@ def importDB(data, albums_data, artists_data):
 
     # Insert many documents into the collection
     result = albums.insert_many(albums_data)
-    print(result)
 
     print(">>> Inserting documents in Albums collection successful")
 
@@ -47,8 +45,6 @@ def importDB(data, albums_data, artists_data):
 
     # Insert many documents into the collection
     result = artists.insert_many(artists_data)
-    print(result)
-
     print(">>> Inserting documents in Artists collection successful")
 
     # Print the inserted document IDs
