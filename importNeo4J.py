@@ -47,34 +47,32 @@ with open('tracks_features.csv', newline='') as csvfile:
         row["explicit"] = True if row["explicit"] == "True" else False
 
 # Your nodes as a list of dictionaries
-
+albums_data = [dict(t) for t in {tuple(d.items()) for d in albums_data}]
 uri = "bolt://localhost:7687"
 username = "neo4j"
 password = "12345678"
 
 print("Preprocessing done")
+print(f"{len(data)} Tracks, {len(artists_data)} Artists, {len(albums_data)} Albums")
 # Connect to Neo4j
 #%%
+
 def generate_number_sequence(n):
     result = []
-    div = 1000
+    div = 50000
     while div <= n:
         result.append(div)
-        div += 1000
+        div += 50000
     if result[-1] != n:
         result.append(n)
     return result
 
-if len(data) > 1000:
+if len(data) > 50000:
     batches = generate_number_sequence(len(data))
 else:
-    batches = [1000]
-
+    batches = [50000]
 
 prev = 0
-
-print(batches)
-
 for index, batch in enumerate(batches):
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
@@ -83,7 +81,7 @@ for index, batch in enumerate(batches):
         # Run Cypher query to bulk insert nodes
         session.run("""
             UNWIND $nodes AS node
-            MERGE (_album:Album {
+            CREATE (_album:Album {
                 name: node.album,
                 id: node.album_id
             }) 
@@ -109,9 +107,9 @@ for index, batch in enumerate(batches):
                 year: node.year,
                 release_date: node.release_date
             })  
-            MERGE (_album)-[:ContainsTrack]->(track)
+            CREATE (_album)-[:ContainsTrack]->(track)
             FOREACH(idx IN RANGE(0, size(node.artists) - 1) |
-                MERGE (_artist:Artist {
+                CREATE (_artist:Artist {
                     id: node.artist_ids[idx],
                     artist_name: node.artists[idx]
                 })
