@@ -9,7 +9,7 @@ def importDB(data, albums_data, artists_data):
     client = MongoClient(MGDB_URI)  # Update with your MongoDB connection URI
     
     # Creating new Database
-    print(">>> Creating Database `{MGDB_DBN}`")
+    print(f">>> Creating Database `{MGDB_DBN}`")
     db = client[MGDB_DBN]
 
     # Creating new Collection `Tracks`

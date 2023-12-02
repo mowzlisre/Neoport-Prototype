@@ -7,7 +7,7 @@ MGDB_URI = 'mongodb://localhost:27017/'
 MGDB_DBN = 'TracksDB'
 
 
-def generate_number_sequence(n):
+def generate_number_sequence(n, CHUNK):
     result = []
     div = CHUNK
     while div <= n:

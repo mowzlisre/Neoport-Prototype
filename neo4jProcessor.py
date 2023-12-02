@@ -1,5 +1,5 @@
 from support import *
-from batchProcessor import batch_process
+from batchProcessor import batch_process, indexing
 def importDB(data, albums_data, artists_data, ab_tr_rel, at_ab_rel):
     query1 = """
                 UNWIND $nodes AS node
@@ -42,20 +42,25 @@ def importDB(data, albums_data, artists_data, ab_tr_rel, at_ab_rel):
             """
     query4 = """
                 UNWIND $nodes AS node
-                CREATE (a:Album {id: node.album_id})-[:CONTAINS_TRACKS]->(t:Track {id: node.track_id})
+                MATCH (a:Album {id: node.album_id})
+                MATCH (t:Track {id: node.track_id})
+                CREATE (a)-[:CONTAINS_TRACKS]->(t)
             """
     query5 = """
-                UNWIND $nodes AS node
-                CREATE (a:Artist {id: node.artist_id})-[:CONTRIBUTED_TO]->(t:ALBUM {id: node.album_id})
+                CALL apoc.periodic.iterate(
+                    'UNWIND $nodes AS node',
+                    'MATCH (a:Artist {id: row.artist_id}), (b:Album {id: row.album_id}) CREATE (a)-[:CONTRIBUTED_TO]->(b)',
+                    { batchSize: 100, iterateList: true }
+                )
             """
-    print(">>> Inserting Artist nodes")
-    batch_process(artists_data, query1)
-    print(">>> Inserting Album nodes")
-    batch_process(albums_data, query2)
-    print(">>> Inserting Track nodes")
-    batch_process(data, query3)
+    # print(f">>> Inserting {len(artists_data)} Artist nodes")
+    # batch_process(albums_data, query1, False)
+    # print(f">>> Inserting {len(albums_data)} Album nodes")
+    # batch_process(artists_data, query2, False)
+    # print(f">>> Inserting {len(data)} Track nodes")
+    # batch_process(data, query3, False)
     print(f">>> Inserting {len(ab_tr_rel)} Albums-Track Relationships")
-    batch_process(ab_tr_rel, query4)
-    print(f">>> Inserting {len(at_ab_rel)} Artists-Albums Relationships")
-    batch_process(at_ab_rel, query5)
+    batch_process(ab_tr_rel, query4, True)
+    # print(f">>> Inserting {len(at_ab_rel)} Artists-Albums Relationships")
+    # batch_process(at_ab_rel, query5, True)
 
