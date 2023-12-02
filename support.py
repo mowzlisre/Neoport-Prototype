@@ -1,10 +1,11 @@
 NEO_URI = "bolt://localhost:7687"
 USERNAME = "neo4j"
 PASSWORD = "12345678"
-CHUNK = 30000
+CHUNK = 50000
 
 MGDB_URI = 'mongodb://localhost:27017/'
 MGDB_DBN = 'TracksDB'
+
 
 def generate_number_sequence(n):
     result = []

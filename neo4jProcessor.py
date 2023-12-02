@@ -1,31 +1,22 @@
 from support import *
-from neo4j import GraphDatabase
-
-def importDB(data):
-    # Creating chunks of data for batch processing
-    if len(data) > CHUNK:
-        batches = generate_number_sequence(len(data))
-    else:
-        batches = [CHUNK]
-
-
-    print(f">>> Attempting to import data in {len(batches)} batches")
-    print(f">>> Establishing connection with Neo4J Database Server at {NEO_URI}")
-
-    # Connect to Neo4J
-    
-    prev = 0
-    for index, batch in enumerate(batches):
-        driver = GraphDatabase.driver(NEO_URI, auth=(USERNAME, PASSWORD))
-
-        with driver.session() as session:
-            # Run Cypher query to bulk insert nodes
-            result = session.run("""
+from batchProcessor import batch_process
+def importDB(data, albums_data, artists_data, ab_tr_rel, at_ab_rel):
+    query1 = """
                 UNWIND $nodes AS node
-                MERGE (_album:Album {
-                    name: node.album,
-                    id: node.album_id
+                CREATE (_album:Album {
+                    id: node.id,
+                    name: node.name
                 }) 
+            """
+    query2 = """
+                UNWIND $nodes AS node
+                CREATE (_artist:Artist {
+                    id: node.id,
+                    name: node.name
+                })
+            """
+    query3 = """
+                UNWIND $nodes AS node
                 CREATE (track:Track {
                     id: node.id,
                     name: node.name,
@@ -47,20 +38,17 @@ def importDB(data):
                     time_signature: node.time_signature,
                     year: node.year,
                     release_date: node.release_date
-                })  
-                MERGE (_album)-[:ContainsTrack]->(track)
-                FOREACH(idx IN RANGE(0, size(node.artists) - 1) |
-                    CREATE (_artist:Artist {
-                        id: node.artist_ids[idx],
-                        artist_name: node.artists[idx]
-                    })
-                    MERGE (_artist)-[:Contributed]->(_album)
-                )
-            """, nodes=data[prev:batch])
-            print(result)
-        print(f">>> Batch {index+1} of {len(batches)} imported")
-        prev = batch
+                })
+            """
 
-        driver.close()
-    print(">>> Safely closing the connection with Neo4J Database Server")
-    return len(batches)
+    print(">>> Inserting Artist nodes")
+    batch_process(artists_data[:1000], query1, False)
+    print(">>> Inserting Album nodes")
+    batch_process(albums_data[:1000], query2, False)
+    print(">>> Inserting Track nodes")
+    batch_process(data[:1000], query3, False)
+    print(">>> Inserting Albums-Track Relationships")
+    batch_process(ab_tr_rel[:10], '', False)
+    print(">>> Inserting Artists-Albums Relationships")
+    batch_process(at_ab_rel[:10], '', False)
+

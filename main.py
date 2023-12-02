@@ -14,16 +14,16 @@ if __name__ == "__main__":
     # Data Preprocessing
     print(">>> Initializing the Data Preprocessor")
     pr_init = time.time()
-    data, albums_data, artists_data = preprocess(data)
+    data, albums_data, artists_data, ab_tr_rel, at_ab_rel = preprocess(data)
     pr_end = time.time()
     print(f">>> Data Preprocessing completed in {pr_end-pr_init-4:.2f}s")
 
     # Import Data to Neo4J Database
     print(">>> Initializing the Data Import to Neo4j")
     nj_init = time.time()
-    batches = neo4jProcessor.importDB(data)
+    neo4jProcessor.importDB(data, albums_data, artists_data, ab_tr_rel, at_ab_rel)
     nj_end = time.time()
-    print(f">>> {len(data)} Tracks, {len(albums_data)} Albums, {len(artists_data)} Artists nodes and relationships in {batches} Batches imported succesfully in {nj_end-nj_init:.2f}s")
+    print(f">>> {len(data)} Tracks, {len(albums_data)} Albums, {len(artists_data)} Artists nodes and relationships imported succesfully in {nj_end-nj_init:.2f}s")
     
     # # Postprocess
     # print(">>> Initializing the Postprocessing for MongoDB")
