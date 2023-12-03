@@ -2,14 +2,14 @@
 ### Team 5 - Gourab Mukherjee, Monica Muniraj, Mowzli Sre Mohan Dass
 
 ### Pre-requisite before execution
-- Import the `neo4j.dump` file to create a new database with Nodes and Relationships
+- Import the `neo4j.dump` file to create a new database with Nodes and Relationships and start the Neo4J Database Server
 - Install the pip dependencies
     `pip install neo4j` or `pip3 install neo4j`
-- Once the Nodes and Relationships are inserted in the db, run the main.py file
+- Once the DB server is started, run the main.py file
     `main.py` or `python main.py` or `python3 main.py`
 - The main.py file does the following:
     - Data Preprocessing from the csv file
-    - Insertion of data into Neo4j database (comment, it takes huge time to insert nodes and relationships together in the database if the dataset is large)
+    - Insertion of data into Neo4j database (commented out, it takes huge time to insert nodes and relationships together in the database if the dataset is large)
     - Insertion of data into the MongoDB.
         - Automatically create the Database `TracksDB`
         - Also creates the Collections `Tracks`, `Albums`, `Artists`
