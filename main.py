@@ -7,7 +7,7 @@ if __name__ == "__main__":
     print(">>> Automated Data Insertion - Neo4J & MongoDB")
     # Data Loading
     print(">>> Loading the CSV file")
-    with open('sample.csv', newline='') as csvfile:
+    with open('sample.csv', newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         data = list(reader)
         print(">>> Loading CSV file succesful")
