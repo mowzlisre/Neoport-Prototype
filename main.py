@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # nj_init = time.time()
     # neo4jProcessor.importDB(data, albums_data, artists_data, ab_tr_rel, at_ab_rel)
     # nj_end = time.time()
-    # print(f">>> {len(data)} Tracks, {len(albums_data)} Albums, {len(artists_data)} Artists nodes and relationships imported succesfully in {nj_end-nj_init:.2f}s")
+    # print(f">>> {len(data)} Tracks    , {len(albums_data)} Albums, {len(artists_data)} Artists nodes and relationships imported succesfully in {nj_end-nj_init:.2f}s")
 
     # Import Data to MongoDB Database
     print(">>> Initializing the Data Import to MongoDB")

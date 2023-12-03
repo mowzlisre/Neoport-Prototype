@@ -2,10 +2,10 @@
 ### Team 5 - Gourab Mukherjee, Monica Muniraj, Mowzli Sre Mohan Dass
 
 ### Pre-requisite before execution
-- Import the `neo4j.dump` file to create a new database with Nodes and Relationships and start the Neo4J Database Server
+- Import the `neo4j.dump` file to create a new database with Nodes and Relationships and start the Neo4J Database Server and MongoDB Server
 - Install the pip dependencies
-    `pip install neo4j` or `pip3 install neo4j`
-- Once the DB server is started, run the main.py file
+    `pip install neo4j pymongo` or `pip3 install neo4j pymongo`
+- Once the DB servers are started, run the main.py file
     `main.py` or `python main.py` or `python3 main.py`
 - The main.py file does the following:
     - Data Preprocessing from the csv file
