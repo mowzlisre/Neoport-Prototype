@@ -1,9 +1,12 @@
-import csv, neo4jProcessor, mongoProcessor, time
-from processor import preprocess
+import csv, time
+from processors import neo4jProcessor, mongoProcessor
+from processors.processor import preprocess
+from execute import proccess_exec
 
 
 if __name__ == "__main__":
     init = time.time()
+    print(">>> START")
     print(">>> Automated Data Insertion - Neo4J & MongoDB")
     # Data Loading
     print(">>> Loading the CSV file")
@@ -34,6 +37,7 @@ if __name__ == "__main__":
     print(f">>> {len(data)} Tracks, {len(albums_data)} Albums, {len(artists_data)} Artists documents imported succesfully in {mg_end-mg_init:.2f}s")
     end = time.time()
     print(f">>> Automated Data Insertion Completed in {end-init-4:.2f}s")
-
-
+    print(">>> Performing Data Analytics and Queries in MongoDB and Neo4J")
+    proccess_exec()
+    print(">>> END")
     
