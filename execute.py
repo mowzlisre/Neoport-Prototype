@@ -22,3 +22,13 @@ def proccess_exec():
             print(f">>> Neo4J executed {(mongo_diff-neo_diff) * 100 / mongo_diff:.2f}% faster than MongoDB")
         
         print('\n')
+    return [mongo_diff, neo_diff]
+
+if __name__ == '__main__':
+    mongo = []
+    neo = []
+    for i in range(0,10):
+        a, b = proccess_exec()
+        mongo.append(a)
+        neo.append(b)
+    print(mongo, neo)

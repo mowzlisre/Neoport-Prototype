@@ -3,10 +3,10 @@ from neo4j import GraphDatabase
 
 def batch_process(_data, query, rel):
     if rel:
-        if len(_data) > 100:
-            batches = generate_number_sequence(len(_data), 100)
+        if len(_data) > 10000:
+            batches = generate_number_sequence(len(_data), 10000)
         else:
-            batches = [100]
+            batches = [10000]
     else:
         if len(_data) > CHUNK:
             batches = generate_number_sequence(len(_data), CHUNK)

@@ -48,17 +48,20 @@ def importDB(data, albums_data, artists_data, ab_tr_rel, at_ab_rel):
             """
     query5 = """
                 UNWIND $nodes AS node
-                MATCH (a:Album {id: node.artist_id})
-                MATCH (t:Track {id: node.album_id})
+                MATCH (a:Artist {id: node.artist_id})
+                MATCH (t:Album {id: node.album_id})
+                CREATE (a)-[:CONTRIBUTED]->(t)
             """
+    print(">>> Indexing the Nodes")
+    indexing()
     print(f">>> Inserting {len(artists_data)} Artist nodes")
     batch_process(albums_data, query1, False)
     print(f">>> Inserting {len(albums_data)} Album nodes")
     batch_process(artists_data, query2, False)
     print(f">>> Inserting {len(data)} Track nodes")
     batch_process(data, query3, False)
-    # print(f">>> Inserting {len(ab_tr_rel)} Albums-Track Relationships")
-    # batch_process(ab_tr_rel, query4, True)
-    # print(f">>> Inserting {len(at_ab_rel)} Artists-Albums Relationships")
-    # batch_process(at_ab_rel, query5, True)
+    print(f">>> Inserting {len(ab_tr_rel)} Albums-Track Relationships")
+    batch_process(ab_tr_rel, query4, True)
+    print(f">>> Inserting {len(at_ab_rel)} Artists-Albums Relationships")
+    batch_process(at_ab_rel, query5, True)
 
